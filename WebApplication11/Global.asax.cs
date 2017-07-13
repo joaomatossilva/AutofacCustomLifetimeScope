@@ -18,7 +18,8 @@ namespace WebApplication11
         protected void Application_Start()
         {
             Container = BuildContainer();
-            DependencyResolver.SetResolver(new AutofacDependencyResolver(Container));
+            var lifeTimeScopeProvider = new LifeTimeScopeProvider(Container);
+            DependencyResolver.SetResolver(new AutofacDependencyResolver(Container, lifeTimeScopeProvider));
 
             AreaRegistration.RegisterAllAreas();
             RouteConfig.RegisterRoutes(RouteTable.Routes);
@@ -51,10 +52,37 @@ namespace WebApplication11
         {
             //configure the container and start a lifetimescope (with the same tag as the AspNet request)
             var scope = Container.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag);
+            scope.CurrentScopeEnding += (sender, args) =>
+            {
+                int a = 0;
+            };
 
             //Save the scope on the context and register it to be disposed on the end of the context
             context.Items[ScopeKey] = scope;
             context.DisposeOnPipelineCompleted(scope);
         }
+    }
+
+    public class LifeTimeScopeProvider : ILifetimeScopeProvider
+    {
+        public LifeTimeScopeProvider(ILifetimeScope container)
+        {
+            ApplicationContainer = container;
+        }
+
+        public ILifetimeScope GetLifetimeScope(Action<ContainerBuilder> configurationAction)
+        {
+            if (HttpContext.Current == null)
+            {
+                throw new InvalidOperationException("Http Context Not Available");
+            }
+            return (ILifetimeScope)HttpContext.Current.Items[MvcApplication.ScopeKey];
+        }
+
+        public void EndLifetimeScope()
+        {
+        }
+
+        public ILifetimeScope ApplicationContainer { get; }
     }
 }
