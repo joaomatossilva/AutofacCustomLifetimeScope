@@ -8,6 +8,13 @@ namespace WebApplication11.Controllers
 {
     public class HomeController : Controller
     {
+        private readonly PluggableComponent _component;
+
+        public HomeController(PluggableComponent component)
+        {
+            _component = component;
+        }
+
         // GET: Home
         public ActionResult Index()
         {
