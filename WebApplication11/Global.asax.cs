@@ -35,7 +35,7 @@ namespace WebApplication11
             var builder = new ContainerBuilder();
 
             //setup the registry of the PluggableComponent
-            builder.RegisterType<PluggableComponent>().AsSelf().InstancePerLifetimeScope();
+            builder.RegisterType<PluggableComponent>().AsSelf().InstancePerRequest();
 
             //setup the middleware
             builder.RegisterType<SimpleMiddleware>().AsSelf();
@@ -49,8 +49,8 @@ namespace WebApplication11
 
         private void ConfigureAutofac(HttpContext context)
         {
-            //configure the container and start a lifetimescope
-            var scope = Container.BeginLifetimeScope(ScopeKey);
+            //configure the container and start a lifetimescope (with the same tag as the AspNet request)
+            var scope = Container.BeginLifetimeScope(Autofac.Core.Lifetime.MatchingScopeLifetimeTags.RequestLifetimeScopeTag);
 
             //Save the scope on the context and register it to be disposed on the end of the context
             context.Items[ScopeKey] = scope;
